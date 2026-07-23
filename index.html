@@ -457,6 +457,7 @@ footer{height:60px;}
 "use strict";
 /* ================= コア：定義・状態・タスク・カレンダー ================= */
 const $ = s => document.querySelector(s);
+const TOKI_VER="v3";   // バージョン確認用（⚙️設定の見出しに表示）
 const KEY = "natsuyasumin_toki_v1";   // 公開版とは完全に別のデータ保存キー
 
 /* ---------- プレイヤープロファイル（きょうだい対応） ----------
@@ -518,9 +519,10 @@ function computeStages(){
     prev=Math.max(prev+4, Math.round(T*fr[i]));
     STAGES[i].min=prev;
   }
-  /* さる以降は タスク量を増やしても つねに「5〜7個きざみ」でイベント連発 */
+  /* さる以降は タスク量を増やしても つねに「5〜7個きざみ」でイベント連発
+     （49の下限つき＝初期値48から どんな設定でも 勝手に進化しない安全ガード） */
   const step=Math.min(7, Math.max(5, Math.round(T*0.052)));
-  prev=Math.max(prev+5, Math.round(T*0.46));
+  prev=Math.max(prev+5, 49, Math.round(T*0.46));
   STAGES[5].min=prev;
   for(let i=6;i<STAGES.length;i++){
     prev+=step;
@@ -2344,7 +2346,7 @@ function showSetup(first){
     '<button class="mode-btn'+(p.id===PROFILES.activeId?" on":"")+'" data-pid="'+esc(p.id)+'">'+esc(p.name)+'</button>'+
     (PROFILES.list.length>1?'<button class="del-btn" data-pdel="'+esc(p.id)+'" style="width:24px;height:24px;font-size:11px;">✖</button>':"")+
     '</span>').join("");
-  ov.innerHTML='<div class="panel scrolly"><h2>⚙️ タスクせってい</h2>'+
+  ov.innerHTML='<div class="panel scrolly"><h2>⚙️ タスクせってい <span style="font-size:12px;color:#b6c2cb;">'+TOKI_VER+'</span></h2>'+
     '<div class="desc">'+(first?"はじめまして！まいにち がんばるタスクを きめよう！<br>":"")+
     'えもじを タップすると <b>すきな えもじを えらべる</b>よ！タスクは じゆうに ふやせる・けせるよ。</div>'+
     '<div class="setup-h">👤 プレイヤー</div>'+

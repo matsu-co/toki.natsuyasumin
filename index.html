@@ -484,10 +484,13 @@ const STAGES = [
   {name:"ギラファノコギリクワガタ",   min:27},
   {name:"さる",                       min:53},
   {name:"もぐら",                     min:60},
-  {name:"てんとうむし",               min:69},
-  {name:"とかげ",                     min:77},
-  {name:"かめ",                       min:84},
-  {name:"コーカサスオオカブト",       min:92},
+  {name:"てんとうむし",               min:66},
+  {name:"とかげ",                     min:72},
+  {name:"かめ",                       min:78},
+  {name:"コーカサスオオカブト",       min:84},
+  {name:"かたつむり",                 min:88},
+  {name:"いるか",                     min:92},
+  {name:"ティラノサウルス",           min:96},
   {name:"ヘラクレスオオカブト",       min:101},
 ];
 /* タスクの量と なつやすみの長さに合わせて、進化に必要な数を自動調整する。
@@ -498,8 +501,8 @@ function computeStages(){
   const hwSum=S.hwDef.reduce((a,h)=>a+(h.max>0?h.max:0),0);           // ♾️は除外
   const T=Math.round(0.45*daily*D + 0.7*hwSum);                       // 期待できる合計タスク数のめやす
   STAGES[1].min=5;                                                    // ふ化だけは すぐ楽しめるように固定
-  /* 12段階を細切れに配置（後半は約8%きざみでイベント連発） */
-  const fr=[0,0,0.11,0.19,0.28,0.55,0.63,0.72,0.80,0.88,0.96,1.05];
+  /* 15段階を細切れに配置（後半はイベント連発） */
+  const fr=[0,0,0.11,0.19,0.28,0.55,0.62,0.69,0.75,0.81,0.87,0.915,0.96,1.005,1.05];
   let prev=5;
   for(let i=2;i<STAGES.length;i++){
     prev=Math.max(prev+4, Math.round(T*fr[i]));
@@ -902,7 +905,10 @@ function creatureSVG(stageIdx, colors, recent, gid, sleeping){
     stageIdx===8?["#c5e1a5","#8bc34a"] :      // とかげ：せなか
     stageIdx===9?["#bca789","#8d6e63"] :      // かめ：こうら
     stageIdx===10?["#5d4037","#3e2723"] :     // コーカサス
-    stageIdx===11?["#4a2c20","#2b1a12"] :     // ヘラクレス
+    stageIdx===11?["#d7a86e","#b07a4a"] :     // かたつむり：から
+    stageIdx===12?["#d6efff","#9fd4f5"] :     // いるか：おなか
+    stageIdx===13?["#e8f5e9","#aed581"] :     // ティラノ：おなか
+    stageIdx===14?["#4a2c20","#2b1a12"] :     // ヘラクレス
     ["#ffffff","#eef6ff"];
   const defs='<defs><linearGradient id="'+gid+'" x1="0" y1="0" x2="1" y2="0">'+gradStops(colors)+'</linearGradient>'+
     '<linearGradient id="'+gid+'v" x1="0" y1="0" x2="0" y2="1">'+gradStops(colors)+'</linearGradient>'+
@@ -1025,11 +1031,61 @@ function creatureSVG(stageIdx, colors, recent, gid, sleeping){
       '<circle cx="0" cy="-84" r="17" fill="#9ccc65" stroke="#33691e" stroke-width="3.5"/>'+
       face(0,-86,8,sleeping)+
       '</g>';
-  }else{ /* くわがた系（3,4）とキング級（10,11） */
-    const hercules = stageIdx===11;
+  }else if(stageIdx===11){ /* かたつむり */
+    const s11=1+Math.min(n,45)*0.008;
+    body='<g transform="scale('+s11+')">'+
+      '<path d="M-46 0 Q -50 -26 -28 -30 Q -10 -32 -6 -16 L 40 -16 Q 52 -16 52 -6 Q 52 0 40 0 Z" fill="#f5e6c8" stroke="#c9a96e" stroke-width="3.5"/>'+
+      '<circle cx="16" cy="-52" r="34" fill="url(#'+gid+'w)" stroke="#8a5a33" stroke-width="3.5"/>'+
+      '<path d="M40 -52 a 24 24 0 1 1 -24 -24 a 16 16 0 1 1 -14 18 a 8 8 0 1 0 10 -8" fill="none" stroke="rgba(90,60,30,.5)" stroke-width="3"/>'+
+      '<line x1="-34" y1="-30" x2="-40" y2="-52" stroke="#c9a96e" stroke-width="4" stroke-linecap="round"/>'+
+      '<line x1="-22" y1="-32" x2="-18" y2="-54" stroke="#c9a96e" stroke-width="4" stroke-linecap="round"/>'+
+      '<circle cx="-40" cy="-56" r="6.5" fill="#fff" stroke="#8a5a33" stroke-width="2"/>'+
+      '<circle cx="-18" cy="-58" r="6.5" fill="#fff" stroke="#8a5a33" stroke-width="2"/>'+
+      (sleeping
+        ?'<path d="M-43 -56 q 3 3 6 0 M-21 -58 q 3 3 6 0" stroke="#333" stroke-width="2" fill="none" stroke-linecap="round"/>'
+        :'<circle cx="-39" cy="-56" r="2.8" fill="#333"/><circle cx="-17" cy="-58" r="2.8" fill="#333"/>')+
+      '<path d="M-32 -20 q 4 4 8 0" stroke="#8a5a33" stroke-width="2.5" fill="none" stroke-linecap="round"/>'+
+      '<circle cx="-40" cy="-16" r="3.5" fill="#ff9aa2" opacity=".6"/>'+
+      '</g>';
+  }else if(stageIdx===12){ /* いるか */
+    const s12=1+Math.min(n,45)*0.008;
+    body='<g transform="scale('+s12+')">'+
+      '<path d="M-14 0 Q -28 -2 -32 -12 L -14 -8 Q -20 -18 -10 -22 L 8 -22 Q 0 -16 -4 -8 L 12 -12 Q 10 -2 -4 0 Z" fill="#4fa8e8" stroke="#1976d2" stroke-width="3"/>'+
+      '<path d="M-2 -18 C -28 -32 -32 -80 -8 -100 C 4 -110 22 -106 28 -92 C 38 -70 30 -34 6 -18 Z" fill="#5cb3f0" stroke="#1976d2" stroke-width="3.5"/>'+
+      '<path d="M-4 -24 C -20 -36 -22 -70 -6 -90 C 0 -80 4 -50 0 -26 Z" fill="url(#'+gid+'w)" opacity=".95"/>'+
+      '<path d="M24 -66 Q 44 -72 48 -88 Q 32 -86 22 -76 Z" fill="#4fa8e8" stroke="#1976d2" stroke-width="3"/>'+
+      '<path d="M-8 -102 Q -22 -108 -28 -100 Q -20 -94 -8 -94 Z" fill="#5cb3f0" stroke="#1976d2" stroke-width="3"/>'+
+      '<circle cx="4" cy="-94" r="6" fill="#fff"/>'+
+      (sleeping
+        ?'<path d="M0 -94 q 4 4 8 0" stroke="#1976d2" stroke-width="2.5" fill="none" stroke-linecap="round"/>'
+        :'<circle cx="5" cy="-93" r="3" fill="#123a5c"/>')+
+      '<path d="M-14 -88 q 4 3 9 1" stroke="#1976d2" stroke-width="2.5" fill="none" stroke-linecap="round"/>'+
+      '<circle cx="13" cy="-84" r="3.5" fill="#ff9aa2" opacity=".6"/>'+
+      '<text x="-42" y="-104" font-size="16">💦</text>'+
+      '</g>';
+  }else if(stageIdx===13){ /* ティラノサウルス */
+    const s13=1+Math.min(n,45)*0.009;
+    body='<g transform="scale('+s13+')">'+
+      '<path d="M26 -20 Q 58 -14 72 -32 Q 52 -28 32 -36 Z" fill="#66bb6a" stroke="#2e7d32" stroke-width="3"/>'+
+      '<path d="M-20 0 l-4 -18 12 0 2 18 Z M12 0 l-2 -18 12 0 -4 18 Z" fill="#4caf50" stroke="#2e7d32" stroke-width="3"/>'+
+      '<ellipse cx="0" cy="-40" rx="28" ry="30" fill="#66bb6a" stroke="#2e7d32" stroke-width="3.5"/>'+
+      '<ellipse cx="-4" cy="-36" rx="16" ry="22" fill="url(#'+gid+'w)" opacity=".95"/>'+
+      '<path d="M-25 -48 l-10 6 M-25 -42 l-9 2" stroke="#2e7d32" stroke-width="5" stroke-linecap="round"/>'+
+      '<path d="M-24 -66 Q -34 -96 -4 -100 Q 30 -102 32 -80 Q 33 -70 24 -66 L 26 -58 Q 8 -52 -12 -58 Z" fill="#66bb6a" stroke="#2e7d32" stroke-width="3.5"/>'+
+      '<path d="M-22 -66 L 25 -65" stroke="#2e7d32" stroke-width="2.5"/>'+
+      '<path d="M-15 -65 l3 6 3 -6 6 0 3 6 3 -6 6 0 3 6 3 -6" fill="#fff" stroke="#2e7d32" stroke-width="1.5" stroke-linejoin="round"/>'+
+      '<path d="M-8 -100 l5 -8 5 8 M4 -100 l5 -8 5 8" fill="#4caf50" stroke="#2e7d32" stroke-width="2" stroke-linejoin="round"/>'+
+      '<circle cx="8" cy="-84" r="6.5" fill="#fff"/>'+
+      (sleeping
+        ?'<path d="M3 -84 q 4 4 9 0" stroke="#2e7d32" stroke-width="2.5" fill="none" stroke-linecap="round"/>'
+        :'<circle cx="9" cy="-83" r="3.2" fill="#123"/>')+
+      '<circle cx="22" cy="-76" r="3.5" fill="#ff9aa2" opacity=".6"/>'+
+      '</g>';
+  }else{ /* くわがた系（3,4）とキング級（10,14） */
+    const hercules = stageIdx===14;
     const sc=(1+Math.min(n,45)*0.012)*(hercules?1.08:1);
     const bodyCol = stageIdx===3?"#5d4037" : stageIdx===4?"#4e342e" : stageIdx===10?"#3e2723" : "#2d1a12";
-    const caucasus = stageIdx>=10;   // キング級は体ぜんぶグラデ（進化直後はただの茶色→たべた色でハデに）
+    const caucasus = (stageIdx===10||stageIdx===14);   // キング級は体ぜんぶグラデ
     const hornFill = caucasus ? 'url(#'+gid+'w)' : bodyCol;
     const elytraFill = 'url(#'+gid+'w)';
     let horns="";
@@ -1219,8 +1275,8 @@ function renderScene(popNew){
   if(me){ me.style.cursor="pointer"; me.addEventListener("click",()=>{ SFX.jump(); toast("えへへ！🎵",900); }); }
 }
 function natsuoHeadY(){
-  /* 0たまご 1いもむし 2せみ 3くわがた 4ギラファ 5さる 6もぐら 7てんとう 8とかげ 9かめ 10コーカサス 11ヘラクレス */
-  return [100,90,120,190,250,125,95,115,105,100,230,285][S.natsuoStageIdx]||190;
+  /* 0たまご 1いもむし 2せみ 3くわがた 4ギラファ 5さる 6もぐら 7てんとう 8とかげ 9かめ 10コーカサス 11かたつむり 12いるか 13ティラノ 14ヘラクレス */
+  return [100,90,120,190,250,125,95,115,105,100,230,105,125,120,285][S.natsuoStageIdx]||190;
 }
 function creatureScreenPos(){
   const r=$("#scene").getBoundingClientRect();
@@ -1294,9 +1350,12 @@ const BATTLE_META={
   fuse:{title:"💣 ばくだんどうかせん", desc:"どうかせんを 1本ずつ えらぶよ。<br>ばくだんに つながってたら ドカーン！なつおに ばくだんを ひかせよう！"},
   suika:{title:"🍉 スイカ早ぐい対決", desc:"ボタンを れんだして スイカを たべまくれ！<br>なつおより さきに かんしょくだ！"},
   baseball:{title:"⚾ やきゅう対決", desc:"ピッチャーは なつお！ボールが ちかづいたら スイング！<br>6きゅうのうち 3本 ヒットで かち！"},
+  fishing:{title:"🎣 つり対決", desc:"ウキに「❗」が でたら すぐ「つりあげる！」をタップ！<br>なつおより さきに さかなを 3びき つろう！"},
+  hoop:{title:"🔵 輪っかくぐり", desc:"わっかが きたら タイミングよく ジャンプで くぐりぬけろ！<br>なつおより おおく くぐれたら かち！"},
+  volcano:{title:"🌋 かざん よそうバトル", desc:"3つの かざんの どれかが ふんかする！<br>なつおより さきに ふんかする かざんを あてよう！"},
 };
 /* 進化先ごとのミニゲーム割り当て */
-const BATTLE_FOR_STAGE={2:"race",3:"leaf",4:"jump",5:"race",6:"climb",7:"dig",8:"janken",9:"fuse",10:"suika",11:"baseball"};
+const BATTLE_FOR_STAGE={2:"race",3:"leaf",4:"jump",5:"race",6:"climb",7:"dig",8:"janken",9:"fuse",10:"suika",11:"baseball",12:"fishing",13:"hoop",14:"volcano"};
 function miniCreature(stageIdx, colors, recent, gid, w){
   const cs=colors.slice(-6);
   return '<svg viewBox="-180 -280 360 290" width="'+w+'" height="'+Math.round(w*290/360)+'" style="overflow:visible">'+
@@ -1334,7 +1393,10 @@ function showBattleIntro(type, battleNo, newIdx){
     else if(type==="janken") runJanken(battleNo,newIdx);
     else if(type==="fuse") runFuse(battleNo,newIdx);
     else if(type==="suika") runSuika(battleNo,newIdx);
-    else runBaseball(battleNo,newIdx);
+    else if(type==="baseball") runBaseball(battleNo,newIdx);
+    else if(type==="fishing") runFishing(battleNo,newIdx);
+    else if(type==="hoop") runHoop(battleNo,newIdx);
+    else runVolcano(battleNo,newIdx);
   });
 }
 function speech(box,x,y,msg,ms){
@@ -1616,110 +1678,152 @@ function runDig(battleNo,newIdx){
   });
 }
 
-/* ---------- じゃんけんカードバトル（てんとうむし→とかげ） ---------- */
+/* ---------- じゃんけんカードバトル（てんとうむし→とかげ）
+     カードは毎回3まいから すきに えらべる。あいこは やりなおし。2勝でクリア ---------- */
 function runJanken(battleNo,newIdx){
   const ov=$("#overlay");
   const HANDS=["✊","✌️","✋"];
-  let myCards=[0,1,2], rivCards=[0,1,2], round=1, meW=0, rivW=0;
+  let round=1, meW=0, rivW=0, locked=false;
   function beats(a,b){ return (a===0&&b===1)||(a===1&&b===2)||(a===2&&b===0); }
   function render(msg,reveal){
     ov.innerHTML='<div class="panel"><h2>✊ じゃんけんカードバトル！</h2>'+
       '<div class="battle-hud"><span class="me">'+esc(pName())+'：'+meW+'かち</span>'+
-      '<span style="color:#8b95a0;">ラウンド '+Math.min(round,3)+'/3</span>'+
+      '<span style="color:#8b95a0;">しょうぶ '+Math.min(round,3)+'/3（あいこは やりなおし）</span>'+
       '<span class="riv">なつお：'+rivW+'かち</span></div>'+
       '<div style="margin:8px 0;font-size:15.5px;font-weight:800;color:#5d6b78;min-height:24px;">'+msg+'</div>'+
       (reveal?'<div style="font-size:46px;margin:4px 0;">'+reveal+'</div>':"")+
-      '<div style="font-size:14px;font-weight:800;color:#7b6cd9;">なつおの のこりカード</div>'+
+      '<div style="font-size:14px;font-weight:800;color:#7b6cd9;">なつお「どれ だそうかな〜…」</div>'+
       '<div style="display:flex;gap:8px;justify-content:center;margin:6px 0 10px;">'+
-        rivCards.map(()=>'<div style="width:56px;height:74px;background:linear-gradient(#9f8fef,#7b6cd9);border-radius:10px;'+
+        [0,1,2].map(()=>'<div style="width:56px;height:74px;background:linear-gradient(#9f8fef,#7b6cd9);border-radius:10px;'+
           'display:flex;align-items:center;justify-content:center;font-size:26px;color:#fff;font-weight:900;">？</div>').join("")+
       '</div>'+
-      (myCards.length?'<div style="font-size:14px;font-weight:800;color:#e2574c;">きみのカード（タップで しょうぶ！）</div>'+
+      '<div style="font-size:14px;font-weight:800;color:#e2574c;">きみのカード（すきなのを タップ！）</div>'+
       '<div style="display:flex;gap:10px;justify-content:center;margin:8px 0;" id="jkMine">'+
-        myCards.map(c=>'<button data-c="'+c+'" style="width:68px;height:90px;font-size:36px;border:none;border-radius:12px;'+
+        [0,1,2].map(c=>'<button data-c="'+c+'" style="width:68px;height:90px;font-size:36px;border:none;border-radius:12px;'+
           'background:#fff;box-shadow:0 4px 0 #d0dde5;cursor:pointer;">'+HANDS[c]+'</button>').join("")+
-      '</div>':"")+
-      '</div>';
-    const mine=$("#jkMine");
-    if(mine) mine.addEventListener("click",e=>{
-      const b=e.target.closest("button"); if(!b) return;
+      '</div></div>';
+    $("#jkMine").addEventListener("click",e=>{
+      const b=e.target.closest("button"); if(!b||locked) return;
+      locked=true;
       const mc=+b.dataset.c;
-      const rc=rivCards[Math.floor(Math.random()*rivCards.length)];
-      myCards=myCards.filter(x=>x!==mc); rivCards=rivCards.filter(x=>x!==rc);
-      let res;
-      if(beats(mc,rc)){ meW++; res="きみの かち！🎉"; SFX.pop(); }
-      else if(beats(rc,mc)){ rivW++; res="なつおの かち…"; SFX.ouch(); }
-      else{ res="あいこ！"; SFX.tick(); }
-      round++;
+      const rc=Math.floor(Math.random()*3);
       const rv=HANDS[mc]+"　VS　"+HANDS[rc];
-      if(round>3){
+      let res;
+      if(beats(mc,rc)){ meW++; res="きみの かち！🎉"; SFX.pop(); round++; }
+      else if(beats(rc,mc)){ rivW++; res="なつおの かち…"; SFX.ouch(); round++; }
+      else{ res="あいこ！もういっかい！"; SFX.tick(); }
+      if(round>3 || meW>=2 || rivW>=2){
         render(res,rv);
         bTimeout(()=>finishBattle(meW>=2,battleNo,newIdx,"janken"),1600);
       }else{
+        locked=false;
         render(res+"　つぎの カードを えらぼう！",rv);
       }
     });
   }
-  render("すきな カードを 1まい えらんでね！");
+  render("すきな カードを えらんでね！さきに 2かい かったほうの しょうり！");
 }
 
-/* ---------- ばくだんどうかせん（とかげ→かめ） ---------- */
+/* ---------- ばくだんどうかせん（とかげ→かめ）
+     ほんもののあみだくじ。えらんだ線を 火が じりじり たどっていく ---------- */
 function runFuse(battleNo,newIdx){
   const ov=$("#overlay");
-  function playRound(count){
-    const bombAt=Math.floor(Math.random()*count);
-    ov.innerHTML='<div class="panel"><h2>💣 ばくだんどうかせん！</h2>'+
-      '<div class="desc" id="fzMsg" style="font-weight:800;">どうかせんを 1本 えらんでタップ！ばくだんじゃ ありませんように…</div>'+
-      '<div style="display:flex;gap:26px;justify-content:center;margin:10px 0;" id="fzRow">'+
-      Array.from({length:count},(_,i)=>'<button data-i="'+i+'" style="border:none;background:none;cursor:pointer;padding:0;">'+
-        '<div style="font-size:22px;">🔥</div>'+
-        '<div class="fz-line" style="width:8px;height:110px;margin:0 auto;background:repeating-linear-gradient(45deg,#c98d5a 0 6px,#8a5a33 6px 12px);border-radius:4px;"></div>'+
-        '<div class="fz-box" style="font-size:40px;">🎁</div></button>').join("")+
-      '</div>'+
-      '<div style="display:flex;justify-content:center;gap:30px;align-items:flex-end;">'+
-        '<div>'+miniMe("gFm2",64)+'</div><div>'+miniRiv("gFr2",64)+'</div>'+
-      '</div></div>';
-    const row=$("#fzRow");
-    let picked=false;
-    row.addEventListener("click",e=>{
-      const b=e.target.closest("button"); if(!b||picked||b.disabled) return;
-      picked=true;
-      const mi=+b.dataset.i;
-      b.querySelector(".fz-line").style.background="repeating-linear-gradient(45deg,#ffd93d 0 6px,#ff9f43 6px 12px)";
-      SFX.tick();
-      $("#fzMsg").textContent="ちりちりちり……";
-      bTimeout(()=>{
-        if(mi===bombAt){
-          b.querySelector(".fz-box").textContent="💥"; SFX.ouch();
-          $("#fzMsg").textContent="ドッカーン！！ばくだんだった〜！！";
-          bTimeout(()=>finishBattle(false,battleNo,newIdx,"fuse"),1400);
-          return;
-        }
-        b.querySelector(".fz-box").textContent="🌻"; b.disabled=true; SFX.pop();
-        $("#fzMsg").textContent="セーフ！つぎは なつおの ばん…";
-        bTimeout(()=>{
-          /* なつおのばん：のこりから えらぶ（ばくだんを ひきやすい） */
-          const rest=[...row.querySelectorAll("button")].filter(x=>!x.disabled);
-          const bombBtn=rest.find(x=>+x.dataset.i===bombAt);
-          const pick=(bombBtn && Math.random()<0.7) ? bombBtn : rest[Math.floor(Math.random()*rest.length)];
-          pick.querySelector(".fz-line").style.background="repeating-linear-gradient(45deg,#9f8fef 0 6px,#7b6cd9 6px 12px)";
-          $("#fzMsg").textContent='なつお「どれでも いっしょでしょ…」ちりちりちり……';
-          bTimeout(()=>{
-            if(+pick.dataset.i===bombAt){
-              pick.querySelector(".fz-box").textContent="💥"; SFX.boom();
-              $("#fzMsg").textContent="ドッカーン！！なつおが ばくだんを ひいた！！";
-              bTimeout(()=>finishBattle(true,battleNo,newIdx,"fuse"),1400);
-            }else{
-              pick.querySelector(".fz-box").textContent="🌻"; pick.disabled=true; SFX.tick();
-              $("#fzMsg").textContent="なつおも セーフ…しょうぶは つづく！えらんで！";
-              picked=false;
-            }
-          },1300);
-        },1100);
-      },1300);
+  const X=[50,150,250,350], TOP=26, BOT=196;
+  /* よこ線（あみだのはしご）をランダム生成 */
+  const rungs=[];
+  [54,82,110,138,166].forEach(y=>{
+    const p=Math.floor(Math.random()*4);   // 0-2:よこ線あり 3:なし
+    if(p<3) rungs.push({y:y,p:p});
+  });
+  if(rungs.length<2){ rungs.push({y:96,p:0},{y:124,p:2}); }
+  rungs.sort((a,b)=>a.y-b.y);
+  function pathFrom(c){
+    const pts=[[X[c],TOP]];
+    rungs.forEach(r=>{
+      if(r.p===c){ pts.push([X[c],r.y]); c=c+1; pts.push([X[c],r.y]); }
+      else if(r.p===c-1){ pts.push([X[c],r.y]); c=c-1; pts.push([X[c],r.y]); }
     });
+    pts.push([X[c],BOT]);
+    return {pts:pts,end:c};
   }
-  playRound(4);
+  const bombCol=Math.floor(Math.random()*4);
+  const vLines=X.map(x=>'<line x1="'+x+'" y1="'+TOP+'" x2="'+x+'" y2="'+BOT+'" class="amida"/>').join("");
+  const rungLines=rungs.map(r=>'<line x1="'+X[r.p]+'" y1="'+r.y+'" x2="'+X[r.p+1]+'" y2="'+r.y+'" class="amida"/>').join("");
+  const boxes=X.map((x,i)=>'<text id="fzEnd'+i+'" x="'+x+'" y="'+(BOT+30)+'" font-size="26" text-anchor="middle">🎁</text>').join("");
+  const tops=X.map((x,i)=>'<g class="fzTop" data-i="'+i+'" style="cursor:pointer;">'+
+    '<circle cx="'+x+'" cy="'+(TOP-12)+'" r="13" fill="#ffefc2" stroke="#c98a1e" stroke-width="2"/>'+
+    '<text x="'+x+'" y="'+(TOP-6)+'" font-size="14" text-anchor="middle" font-weight="900" fill="#c98a1e">'+(i+1)+'</text></g>').join("");
+  ov.innerHTML='<div class="panel"><h2>💣 ばくだんどうかせん！</h2>'+
+    '<div class="desc" id="fzMsg" style="font-weight:800;">すきな ばんごうを タップ！あみだくじの さきに ばくだんが 1つ…！</div>'+
+    '<svg id="fzSvg" viewBox="0 0 400 240" style="width:min(440px,90vw);display:block;margin:0 auto;">'+
+      '<style>.amida{stroke:#8a5a33;stroke-width:5;stroke-linecap:round;}</style>'+
+      vLines+rungLines+boxes+tops+
+      '<text id="fzFire" x="-60" y="-60" font-size="22" text-anchor="middle">🔥</text>'+
+    '</svg>'+
+    '<div style="display:flex;justify-content:center;gap:34px;align-items:flex-end;">'+
+      '<div>'+miniMe("gFm2",60)+'<div style="font-weight:900;color:#e2574c;font-size:13px;">'+esc(pName())+'</div></div>'+
+      '<div>'+miniRiv("gFr2",60)+'<div style="font-weight:900;color:#7b6cd9;font-size:13px;">なつお</div></div>'+
+    '</div></div>';
+  const svg=$("#fzSvg"), fire=$("#fzFire");
+  const taken=[];
+  let busyF=false;
+  function trace(c,cb){
+    const P=pathFrom(c), pts=P.pts;
+    const segs=[]; let total=0;
+    for(let i=1;i<pts.length;i++){ const L=Math.hypot(pts[i][0]-pts[i-1][0],pts[i][1]-pts[i-1][1]); segs.push(L); total+=L; }
+    const dur=Math.max(2200, total/110*1000);   // じりじり ゆっくり
+    const t0=performance.now();
+    let lastTick=0;
+    function step(now){
+      let dist=Math.min(1,(now-t0)/dur)*total;
+      if(now-lastTick>380){ lastTick=now; SFX.tick(); }   // ちりちり音
+      let i=0;
+      while(i<segs.length && dist>segs[i]){ dist-=segs[i]; i++; }
+      if(i>=segs.length || (now-t0)>=dur){
+        fire.setAttribute("x",pts[pts.length-1][0]); fire.setAttribute("y",pts[pts.length-1][1]);
+        cb(P.end); return;
+      }
+      const a=pts[i], b=pts[i+1], f=segs[i]?dist/segs[i]:1;
+      fire.setAttribute("x",a[0]+(b[0]-a[0])*f);
+      fire.setAttribute("y",a[1]+(b[1]-a[1])*f);
+      battleTimers.push(setTimeout(()=>requestAnimationFrame(step),16));
+    }
+    requestAnimationFrame(step);
+  }
+  function boom(col,winner){
+    $("#fzEnd"+col).textContent="💥"; SFX.boom();
+    $("#fzMsg").textContent = winner==="me"
+      ? "ドッカーン！！なつおの みちが ばくだんだった！きみの かち！！"
+      : "ドッカーン！！ばくだんに とうちゃく…！";
+    bTimeout(()=>finishBattle(winner==="me",battleNo,newIdx,"fuse"),1500);
+  }
+  svg.addEventListener("click",e=>{
+    const t=e.target.closest(".fzTop"); if(!t||busyF) return;
+    const i=+t.dataset.i;
+    if(taken.includes(i)) return;
+    busyF=true; taken.push(i); t.setAttribute("opacity",".3");
+    $("#fzMsg").textContent="ちりちりちり……🔥";
+    trace(i,(end)=>{
+      if(end===bombCol){ boom(end,"riv"); return; }
+      $("#fzEnd"+end).textContent="🌻"; SFX.pop();
+      $("#fzMsg").textContent="セーフ！つぎは なつおの ばん…";
+      /* なつおは のこりから えらぶ（ばくだんへの みちを ひきやすい） */
+      const remaining=[0,1,2,3].filter(x=>!taken.includes(x));
+      const bombTop=remaining.find(x=>pathFrom(x).end===bombCol);
+      const pick=(bombTop!==undefined && Math.random()<0.7)? bombTop : remaining[Math.floor(Math.random()*remaining.length)];
+      taken.push(pick);
+      bTimeout(()=>{
+        svg.querySelector('.fzTop[data-i="'+pick+'"]').setAttribute("opacity",".3");
+        $("#fzMsg").textContent='なつお「じゃあ ボクは '+(pick+1)+'ばん…」ちりちりちり……🔥';
+        trace(pick,(e2)=>{
+          if(e2===bombCol){ boom(e2,"me"); return; }
+          $("#fzEnd"+e2).textContent="🌻"; SFX.tick();
+          $("#fzMsg").textContent="なつおも セーフ…のこりの ばんごうから えらんで！";
+          busyF=false;
+        });
+      },1200);
+    });
+  });
 }
 
 /* ---------- スイカ早ぐい対決（かめ→コーカサス） ---------- */
@@ -1833,6 +1937,196 @@ function runBaseball(battleNo,newIdx){
   countdown(box,pitch);
 }
 
+/* ---------- つり対決（かたつむり→いるか） ---------- */
+function runFishing(battleNo,newIdx){
+  const ov=$("#overlay");
+  ov.innerHTML='<div class="panel"><h2>🎣 つり対決！</h2>'+
+    '<div class="battle-hud"><span class="me">'+esc(pName())+'：<span id="cMe">0</span>/3びき</span>'+
+    '<span class="riv">なつお：<span id="cRiv">0</span>/3びき</span></div>'+
+    '<div class="stage-box" id="btlBox" style="background:linear-gradient(180deg,#b3e5fc 0%,#81d4fa 34%,#29a3dd 35%,#1479b8 100%);">'+
+      '<div class="runner" style="left:8%;top:2%;">'+miniMe("gFsm",64)+'</div>'+
+      '<div class="runner" style="right:8%;top:2%;">'+miniRiv("gFsr",64)+'</div>'+
+      '<div style="position:absolute;left:22%;top:6%;font-size:26px;">🎣</div>'+
+      '<div style="position:absolute;right:22%;top:6%;font-size:26px;transform:scaleX(-1);">🎣</div>'+
+      '<div id="ukiMe" style="position:absolute;left:30%;top:38%;font-size:30px;transition:transform .15s;">🔴</div>'+
+      '<div id="ukiAlert" style="position:absolute;left:29%;top:26%;font-size:30px;font-weight:900;color:#ff3b30;display:none;text-shadow:0 2px 4px #fff;">❗</div>'+
+      '<div id="ukiRiv" style="position:absolute;right:30%;top:38%;font-size:30px;">🔵</div>'+
+      '<div id="fishRow" style="position:absolute;left:8%;bottom:8px;font-size:26px;letter-spacing:4px;"></div>'+
+      '<div id="fishRowR" style="position:absolute;right:8%;bottom:8px;font-size:26px;letter-spacing:4px;"></div>'+
+    '</div>'+
+    '<button class="big-btn blue" id="reelBtn">つりあげる！</button></div>';
+  const box=$("#btlBox");
+  let meC=0, rivC=0, biting=false, over=false;
+  function done(win){ if(over) return; over=true; bTimeout(()=>finishBattle(win,battleNo,newIdx,"fishing"),900); }
+  function scheduleBite(){
+    if(over) return;
+    bTimeout(()=>{
+      if(over) return;
+      biting=true;
+      $("#ukiAlert").style.display="block";
+      $("#ukiMe").style.transform="translateY(6px) scale(1.2)";
+      SFX.tick();
+      bTimeout(()=>{   // まにあわなかったら にげられる
+        if(biting && !over){
+          biting=false;
+          $("#ukiAlert").style.display="none";
+          $("#ukiMe").style.transform="";
+          speech(box,"26%","46%","にげられた〜！",900);
+        }
+        scheduleBite();
+      },1100);
+    },1200+Math.random()*2200);
+  }
+  function natsuoFish(){
+    if(over) return;
+    bTimeout(()=>{
+      if(over) return;
+      if(Math.random()<0.5){
+        rivC++; $("#cRiv").textContent=rivC;
+        $("#fishRowR").textContent="🐟".repeat(rivC);
+        speech(box,"60%","44%","むにゃ…つれた…",1100); SFX.tick();
+        if(rivC>=3){ done(false); return; }
+      }else{
+        speech(box,"60%","44%","zzz…",1000);
+      }
+      natsuoFish();
+    },4200+Math.random()*1600);
+  }
+  $("#reelBtn").addEventListener("pointerdown",()=>{
+    if(over) return;
+    if(biting){
+      biting=false;
+      $("#ukiAlert").style.display="none";
+      $("#ukiMe").style.transform="";
+      meC++; $("#cMe").textContent=meC;
+      $("#fishRow").textContent="🐟".repeat(meC);
+      speech(box,"26%","40%","つれたー！🐟",1000); SFX.pop(); SFX.yum();
+      if(meC>=3){ done(true); return; }
+    }else{
+      speech(box,"26%","46%","まだ ウキは しずんでないよ…",900); SFX.tick();
+    }
+  });
+  countdown(box,()=>{ scheduleBite(); natsuoFish(); });
+}
+
+/* ---------- 輪っかくぐり（いるか→ティラノ） ---------- */
+function runHoop(battleNo,newIdx){
+  const ov=$("#overlay");
+  ov.innerHTML='<div class="panel"><h2>🔵 輪っかくぐり！</h2>'+
+    '<div class="stage-box" id="btlBox" style="background:linear-gradient(180deg,#b3e5fc 0%,#81d4fa 62%,#29a3dd 62.5%,#1479b8 100%);">'+
+      '<div class="lane-line" style="top:46%"></div>'+
+      '<div class="runner" id="jMe" style="left:12%;top:10%;transition:transform .28s cubic-bezier(.3,1.4,.6,1);"><div class="run-anim">'+miniMe("gHm",76)+'</div></div>'+
+      '<div class="runner" id="jRiv" style="left:12%;top:56%;transition:transform .28s cubic-bezier(.3,1.4,.6,1);"><div class="run-anim">'+miniRiv("gHr",76)+'</div></div>'+
+    '</div>'+
+    '<div class="battle-hud"><span class="me">'+esc(pName())+'：<span id="cMe">0</span> かい</span><span class="riv">なつお：<span id="cRiv">0</span> かい</span></div>'+
+    '<button class="big-btn blue" id="jumpBtn">ジャンプ！</button></div>';
+  const box=$("#btlBox"), meEl=$("#jMe"), rivEl=$("#jRiv"), btn=$("#jumpBtn");
+  let meAir=false, meClear=0, rivClear=0, wave=0;
+  const WAVES=5;
+  const rivFails=new Set(); while(rivFails.size<2) rivFails.add(1+Math.floor(Math.random()*WAVES));
+  btn.addEventListener("pointerdown",()=>{
+    if(meAir) return;
+    meAir=true; SFX.jump();
+    meEl.style.transform="translateY(-72px)";
+    bTimeout(()=>{ meEl.style.transform="translateY(0)"; bTimeout(()=>meAir=false,220); },430);
+  });
+  countdown(box,()=>{
+    function sendWave(){
+      wave++;
+      const w=wave;
+      const rings=[];
+      [["12%"],["58%"]].forEach(lane=>{
+        const r=document.createElement("div");
+        r.className="obstacle"; r.textContent="🔵"; r.style.fontSize="46px";
+        r.style.top=lane[0]; r.style.left="100%";
+        box.appendChild(r); rings.push(r);
+      });
+      const t0=performance.now(), dur=2100;
+      let judged=false, rivJumped=false;
+      function move(now){
+        const p=(now-t0)/dur;
+        if(p>=1){ rings.forEach(r=>r.remove());
+          if(w<WAVES) bTimeout(sendWave,500);
+          else bTimeout(()=>finishBattle(meClear>rivClear, battleNo, newIdx, "hoop"),800);
+          return;
+        }
+        const x=100-p*112;
+        rings.forEach(r=>r.style.left=x+"%");
+        if(!rivJumped && x<30 && !rivFails.has(w)){
+          rivJumped=true;
+          rivEl.style.transform="translateY(-72px)";
+          bTimeout(()=>rivEl.style.transform="translateY(0)",430);
+        }
+        if(!judged && x<=19 && x>=9){
+          judged=true;
+          if(meAir){ meClear++; $("#cMe").textContent=meClear; SFX.pop(); speech(box,"14%","2%","スポッ！",700); }
+          else{ SFX.ouch(); meEl.style.filter="brightness(1.6)"; speech(box,"14%","2%","わっかに ぶつかった！",800); bTimeout(()=>meEl.style.filter="",400); }
+          if(!rivFails.has(w)){ rivClear++; $("#cRiv").textContent=rivClear; }
+          else{ speech(box,"14%","48%","ねぼけて どぼん！",1200); rivEl.style.filter="brightness(1.6)"; bTimeout(()=>rivEl.style.filter="",400); }
+        }
+        battleTimers.push(setTimeout(()=>requestAnimationFrame(move),16));
+      }
+      requestAnimationFrame(move);
+    }
+    sendWave();
+  });
+}
+
+/* ---------- かざんよそうバトル（ティラノ→ヘラクレス） ---------- */
+function runVolcano(battleNo,newIdx){
+  const ov=$("#overlay");
+  function playRound(){
+    ov.innerHTML='<div class="panel"><h2>🌋 かざん よそうバトル！</h2>'+
+      '<div class="desc" id="vcMsg" style="font-weight:800;">どの かざんが ふんかする？1つ えらんでタップ！</div>'+
+      '<div id="vcRow" style="display:flex;gap:16px;justify-content:center;margin:12px 0;background:linear-gradient(#2c3a75,#4a3c30);border-radius:16px;padding:18px 10px;">'+
+        [0,1,2].map(i=>'<button data-i="'+i+'" style="border:none;background:none;cursor:pointer;font-size:64px;position:relative;transition:transform .15s;">🌋'+
+          '<div class="vc-mark" style="position:absolute;top:-8px;left:50%;transform:translateX(-50%);font-size:22px;visibility:hidden;">🚩</div></button>').join("")+
+      '</div>'+
+      '<div style="display:flex;justify-content:center;gap:34px;align-items:flex-end;">'+
+        '<div>'+miniMe("gVm",60)+'<div style="font-weight:900;color:#e2574c;font-size:13px;">'+esc(pName())+'</div></div>'+
+        '<div>'+miniRiv("gVr",60)+'<div style="font-weight:900;color:#7b6cd9;font-size:13px;">なつお</div></div>'+
+      '</div></div>';
+    const row=$("#vcRow");
+    let picked=false;
+    row.addEventListener("click",e=>{
+      const b=e.target.closest("button"); if(!b||picked) return;
+      picked=true;
+      const mi=+b.dataset.i;
+      b.querySelector(".vc-mark").style.visibility="visible"; SFX.tick();
+      const rest=[0,1,2].filter(x=>x!==mi);
+      const ri=rest[Math.floor(Math.random()*rest.length)];
+      const rb=row.querySelector('button[data-i="'+ri+'"]');
+      rb.querySelector(".vc-mark").textContent="🍃";
+      rb.querySelector(".vc-mark").style.visibility="visible";
+      $("#vcMsg").textContent='なつお「ボクは '+(ri+1)+'ばんの かざんに する…」';
+      bTimeout(()=>{
+        /* どれが噴火するか：50%きみ / 25%なつお / 25%どれでもない */
+        const r=Math.random();
+        const erupt = r<0.5 ? mi : r<0.75 ? ri : [0,1,2].find(x=>x!==mi&&x!==ri);
+        $("#vcMsg").textContent="ゴゴゴゴゴ……！！";
+        [...row.querySelectorAll("button")].forEach(x=>x.classList.add("evo-shake"));
+        SFX.ouch();
+        bTimeout(()=>{
+          [...row.querySelectorAll("button")].forEach(x=>x.classList.remove("evo-shake"));
+          const eb=row.querySelector('button[data-i="'+erupt+'"]');
+          eb.textContent="💥"; eb.style.fontSize="70px"; SFX.boom(); confetti(30);
+          if(erupt===mi){
+            $("#vcMsg").textContent="だいふんか！！みごと てきちゅう！！🎉";
+            bTimeout(()=>finishBattle(true,battleNo,newIdx,"volcano"),1500);
+          }else if(erupt===ri){
+            $("#vcMsg").textContent="なつおの かざんが ふんか…！なつおの かち…";
+            bTimeout(()=>finishBattle(false,battleNo,newIdx,"volcano"),1500);
+          }else{
+            $("#vcMsg").textContent="どっちも はずれ！もういっかい しょうぶ！";
+            bTimeout(playRound,1700);
+          }
+        },1900);
+      },1200);
+    });
+  }
+  playRound();
+}
+
 /* ---------- 勝敗 ---------- */
 function finishBattle(win, battleNo, newIdx, type){
   clearBattle();
@@ -1923,7 +2217,9 @@ function runFinale(){
         setTimeout(()=>{
           const msg=document.createElement("div");
           msg.className="fw-msg";
-          msg.innerHTML="たのしかったね！<br>まだまだ なつのあそびを<br>いっぱい たのしもう！🌻";
+          msg.innerHTML="たのしかったね！<br>まだまだ なつのあそびを<br>いっぱい たのしもう！🌻<br>"+
+            '<span style="font-size:17px;display:inline-block;margin-top:10px;background:rgba(255,255,255,.15);border-radius:12px;padding:8px 14px;">'+
+            "💌『たくさん あそんでくれて ありがとう、<br>たのしかったよ。 なつおより』</span>";
           box.appendChild(msg);
           SFX.fanfare(); confetti(120);
           const btn=document.createElement("button");

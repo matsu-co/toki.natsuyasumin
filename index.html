@@ -131,6 +131,16 @@ body{
 .task-btn:active{transform:translateY(3px); box-shadow:0 1px 0 rgba(0,0,0,.14);}
 .task-btn.done{filter:grayscale(.55) brightness(1.08); box-shadow:none; cursor:default; transform:none;}
 .task-row.finished .task-name{color:#b6c2cb;}
+/* 宿題の完了は ひとめでわかる緑ハイライト */
+.task-row.hw-done{
+  background:linear-gradient(90deg,#e8f8dc,#f6fff0);
+  border-radius:16px; border-bottom:none; margin:4px -6px; padding:13px 10px;
+}
+.task-row.hw-done .task-name{color:#4caf50; font-weight:900;}
+.task-btn.done-strong{
+  background:#4caf50 !important; filter:none; box-shadow:none;
+  cursor:default; transform:none; font-size:13.5px;
+}
 .hint{font-size:13.5px; line-height:1.9; color:#5d6b78; background:linear-gradient(140deg,#f2fbf3,#fdf6ec);}
 .hint b{color:#ff8a3d;}
 .hint .k1{color:#3ec06e; font-weight:800;} .hint .k2{color:#4aa3ff; font-weight:800;} .hint .k3{color:#e2574c; font-weight:800;}
@@ -501,11 +511,19 @@ function computeStages(){
   const hwSum=S.hwDef.reduce((a,h)=>a+(h.max>0?h.max:0),0);           // ♾️は除外
   const T=Math.round(0.45*daily*D + 0.7*hwSum);                       // 期待できる合計タスク数のめやす
   STAGES[1].min=5;                                                    // ふ化だけは すぐ楽しめるように固定
-  /* 15段階を細切れに配置（後半はイベント連発） */
-  const fr=[0,0,0.11,0.19,0.28,0.55,0.62,0.69,0.75,0.81,0.87,0.915,0.96,1.005,1.05];
+  /* 序盤（〜ギラファ）はタスク量に比例 */
+  const fr=[0,0,0.11,0.19,0.28];
   let prev=5;
-  for(let i=2;i<STAGES.length;i++){
+  for(let i=2;i<=4;i++){
     prev=Math.max(prev+4, Math.round(T*fr[i]));
+    STAGES[i].min=prev;
+  }
+  /* さる以降は タスク量を増やしても つねに「5〜7個きざみ」でイベント連発 */
+  const step=Math.min(7, Math.max(5, Math.round(T*0.052)));
+  prev=Math.max(prev+5, Math.round(T*0.46));
+  STAGES[5].min=prev;
+  for(let i=6;i<STAGES.length;i++){
+    prev+=step;
     STAGES[i].min=prev;
   }
 }
@@ -693,7 +711,7 @@ function renderTasks(){
     const mode=hwModeOf(h);
     const done = mode==="count" ? v>=h.max : mode==="rough" ? !!S.hwFin[h.id] : false;
     const row=document.createElement("div");
-    row.className="task-row"+(done?" finished":"");
+    row.className="task-row"+(done?" hw-done":"");
     let sub, btnLabel, barPct=null;
     if(mode==="inf"){
       sub=v+" "+esc(h.unit)+"（♾️むげん）"; btnLabel="+1"+h.unit;
@@ -711,9 +729,9 @@ function renderTasks(){
     row.innerHTML='<div class="task-emoji">'+h.emoji+'</div>'+
       '<div class="task-info"><div class="task-name">'+esc(h.name)+'</div><div class="task-sub">'+sub+'</div>'+bar+'</div>';
     const btn=document.createElement("button");
-    btn.className="task-btn"+(done?" done":"");
-    btn.style.background=colorOf(h.emoji);
-    btn.textContent=done?"かんりょう":btnLabel;
+    btn.className="task-btn"+(done?" done-strong":"");
+    if(!done) btn.style.background=colorOf(h.emoji);
+    btn.textContent=done?"✅ かんりょう！":btnLabel;
     if(!done) btn.addEventListener("click",()=>completeHomework(h,btn));
     if(mode==="rough" && !done){
       const wrap=document.createElement("div");
@@ -819,6 +837,16 @@ function addSegment(color){
     busy=true;
     setTimeout(()=>startStageUp(S.stageIdx+1),700);
   }else{
+    /* ヘラクレス後は 6個ごとに ボーナスバトル発生（花火まで あそびが とぎれない） */
+    if(S.stageIdx===STAGES.length-1 && !busy){
+      const k=S.segs.length-STAGES[STAGES.length-1].min;
+      if(k>0 && k%6===0){
+        busy=true; bonusMode=true; S.battles++; revenge=false; save();
+        const types=["race","leaf","jump","climb","dig","janken","fuse","suika","baseball","fishing","hoop","volcano"];
+        const t=types[Math.floor(Math.random()*types.length)];
+        setTimeout(()=>showBattleIntro(t,S.battles,null),800);
+      }
+    }
     setTimeout(checkFinale,600);
   }
 }
@@ -858,7 +886,9 @@ function renderBars(){
   /* あと何個で しんか＆ミニゲームか（ときくん向けのわかりやすい表示） */
   const ne=$("#nextEvo");
   if(idx>=STAGES.length-1){
-    ne.textContent="👑 さいきょうまで そだてた！しゅくだいを ぜんぶ おわらせると…？";
+    const k=Math.max(0, n-STAGES[STAGES.length-1].min);
+    const rem=6-(k%6);
+    ne.textContent="🎪 あと "+rem+"こで ボーナスバトル！しゅくだいを ぜんぶ おわらせると…？🎆";
   }else{
     const need=Math.max(1, STAGES[idx+1].min - n);
     ne.textContent="🎮 あと "+need+"こ タスクをやると しんか＆ミニゲーム！";
@@ -1365,6 +1395,7 @@ function miniMe(gid,w){ return miniCreature(S.stageIdx, S.segs, S.segs.slice(S.e
 function miniRiv(gid,w){ return miniCreature(S.natsuoStageIdx, S.natsuoSegs, S.natsuoSegs.slice(S.natsuoEvoAt), gid, w); }
 let battleTimers=[], battleRaf=0;
 let revenge=false;   // 初戦（なつおが勝つ）のあとのリベンジマッチ中か
+let bonusMode=false; // ヘラクレス後のボーナスバトル中か（進化なし）
 function bTimeout(fn,ms){ battleTimers.push(setTimeout(fn,ms)); }
 function clearBattle(){ battleTimers.forEach(clearTimeout); battleTimers=[]; cancelAnimationFrame(battleRaf); }
 
@@ -1372,9 +1403,12 @@ function showBattleIntro(type, battleNo, newIdx){
   const ov=$("#overlay"); ov.classList.remove("hidden");
   const m=BATTLE_META[type];
   const rev=(battleNo===1 && revenge);
+  const bonus=(newIdx==null);
   ov.innerHTML='<div class="panel">'+
-    '<h2>'+(rev?"🔥 リベンジマッチ！ ":"⚔️ バトル発生！ ")+m.title+'</h2>'+
-    '<div class="desc">'+(rev
+    '<h2>'+(bonus?"🎪 ボーナスバトル！ ":rev?"🔥 リベンジマッチ！ ":"⚔️ バトル発生！ ")+m.title+'</h2>'+
+    '<div class="desc">'+(bonus
+      ?'さいきょうヘラクレスの ちからだめし！なつおが「たまには あそぼうよ〜」と さそってきた！<br>'+m.desc
+      :rev
       ?'なつお「え、もういっかい やるの…？ もう ねむいんだけど…」<br>ねむそうな いまが チャンス！こんどこそ かとう！'
       :'レベルアップのちからだめし！なつおが「やるときは やるよ〜」と おきてきた！<br>'+m.desc)+'</div>'+
     '<div style="display:flex;justify-content:center;gap:40px;align-items:flex-end;margin:6px 0;">'+
@@ -1882,12 +1916,20 @@ function runBaseball(battleNo,newIdx){
     '<div class="stage-box" id="btlBox">'+
       '<div class="runner" style="right:5%;top:30%;">'+miniRiv("gBBr",76)+'</div>'+
       '<div class="runner" style="left:5%;bottom:6px;">'+miniMe("gBBm",80)+'</div>'+
-      '<div style="position:absolute;left:15%;top:50%;width:64px;height:64px;border:3px dashed rgba(255,255,255,.9);border-radius:50%;"></div>'+
+      '<div id="hitZone" style="position:absolute;left:13%;top:46%;width:80px;height:80px;border:3px dashed rgba(255,255,255,.95);border-radius:50%;"></div>'+
       '<div id="ball" style="position:absolute;font-size:28px;display:none;z-index:5;">⚾</div>'+
     '</div>'+
     '<button class="big-btn" id="swingBtn">スイング！</button></div>';
-  const box=$("#btlBox"), ball=$("#ball"), btn=$("#swingBtn");
+  const box=$("#btlBox"), ball=$("#ball"), btn=$("#swingBtn"), zone=$("#hitZone");
   let hits=0, left=6, ballP=-1, active=false, over=false;
+  /* ボールが 点線のまるの中に入っていたら ヒット（少しはみ出てもOKの甘め判定） */
+  function inZone(){
+    const b=ball.getBoundingClientRect(), z=zone.getBoundingClientRect();
+    if(!z.width || !b.width) return ballP>0.62 && ballP<1.0;   // 環境フォールバック
+    const bx=b.left+b.width/2, by=b.top+b.height/2;
+    const zx=z.left+z.width/2, zy=z.top+z.height/2;
+    return Math.hypot(bx-zx, by-zy) <= z.width/2 + b.width/2;
+  }
   function endCheck(){
     if(over) return true;
     if(hits>=3){ over=true; bTimeout(()=>finishBattle(true,battleNo,newIdx,"baseball"),800); return true; }
@@ -1900,7 +1942,7 @@ function runBaseball(battleNo,newIdx){
     speech(box,"64%","20%","いくよ〜！",800);
     bTimeout(()=>{
       active=true;
-      const t0=performance.now(), dur=1500+Math.random()*500;
+      const t0=performance.now(), dur=1750+Math.random()*450;   // すこしゆっくり
       ball.style.display="block";
       function fly(now){
         if(!active) return;
@@ -1922,7 +1964,7 @@ function runBaseball(battleNo,newIdx){
     if(over) return;
     if(!active){ SFX.tick(); return; }
     SFX.jump();
-    if(ballP>0.70 && ballP<0.98){
+    if(inZone()){
       active=false; hits++; $("#bbHit").textContent=hits;
       ball.style.transition="left .7s ease-out, top .7s ease-out";
       ball.style.left="92%"; ball.style.top="2%";
@@ -2133,14 +2175,21 @@ function finishBattle(win, battleNo, newIdx, type){
   const ov=$("#overlay");
   if(win){
     const rev=(battleNo===1 && revenge);
+    const bonus=(newIdx==null);
     S.score.me++; save(); SFX.win(); confetti(80);
-    ov.innerHTML='<div class="panel"><h2 style="font-size:34px;">'+(rev?"🔥 リベンジ せいこう！！":"🏆 きみの かち！！")+'</h2>'+
+    ov.innerHTML='<div class="panel"><h2 style="font-size:34px;">'+(bonus?"🎪 ボーナスバトル せいしょう！！":rev?"🔥 リベンジ せいこう！！":"🏆 きみの かち！！")+'</h2>'+
       '<div style="font-size:60px; margin:6px 0;">🎉😆🎉</div>'+
-      '<div class="desc">'+(rev
+      '<div class="desc">'+(bonus
+        ?'なつお「やっぱり つよいなあ…ボクは ひるねに もどる…」<br>スコアが ふえた！つぎの ボーナスバトルも おたのしみに！'
+        :rev
         ?'なつお「ええーっ！？ さっきの ほんきは どこに…zzz」<br>やったね！しょうりの ちからで しんかが はじまる！！'
         :'なつお「つ、つよすぎる…！ ボクは ねる…」<br>しょうりの ちからで しんかが はじまる！！')+'</div>'+
-      '<button class="big-btn" id="nextBtn">しんかへ！</button></div>';
-    $("#nextBtn").addEventListener("click",()=>{ revenge=false; renderBars(); showEvolution(newIdx); });
+      '<button class="big-btn" id="nextBtn">'+(bonus?"やったー！":"しんかへ！")+'</button></div>';
+    $("#nextBtn").addEventListener("click",()=>{
+      revenge=false;
+      if(bonus){ bonusMode=false; ov.classList.add("hidden"); ov.innerHTML=""; busy=false; renderBars(); renderScene(); setTimeout(checkFinale,500); }
+      else{ renderBars(); showEvolution(newIdx); }
+    });
   }else if(battleNo===1 && !revenge){
     S.score.riv++; save(); SFX.lose();
     ov.innerHTML='<div class="panel"><h2 style="color:#7b6cd9;">😲 なつおの かち…！</h2>'+
@@ -2152,14 +2201,22 @@ function finishBattle(win, battleNo, newIdx, type){
     $("#nextBtn").addEventListener("click",()=>{ renderBars(); showEvolution(newIdx); });
   }else{
     SFX.lose();
-    const canSkip=(battleNo===1);   // リベンジに失敗しても進化はできる
+    const bonus=(newIdx==null);
+    const canSkip=(battleNo===1 || bonus);   // リベンジ失敗でも進化はできる／ボーナスは負けてもOK
+    if(bonus){ S.score.riv++; save(); }
     ov.innerHTML='<div class="panel"><h2 style="color:#4aa3ff;">おしい〜！！</h2>'+
       '<div style="font-size:56px; margin:6px 0;">💦🐛💦</div>'+
-      '<div class="desc">あとちょっとだった！ もういちど ちょうせんだ！<br>（なつおは まちくたびれて あくびしてる…いまが チャンス！）</div>'+
+      '<div class="desc">'+(bonus
+        ?'なつお「えへへ、たまには かつよ〜」<br>くやしかったら もういっかい！（つぎの ボーナスバトルでも OK）'
+        :'あとちょっとだった！ もういちど ちょうせんだ！<br>（なつおは まちくたびれて あくびしてる…いまが チャンス！）')+'</div>'+
       '<button class="big-btn" id="retryBtn">もういちど！</button>'+
       (canSkip?'<button class="big-btn blue" id="skipBtn">つぎへ</button>':"")+'</div>';
     $("#retryBtn").addEventListener("click",()=>showBattleIntro(type, battleNo, newIdx));
-    if(canSkip) $("#skipBtn").addEventListener("click",()=>{ revenge=false; renderBars(); showEvolution(newIdx); });
+    if(canSkip) $("#skipBtn").addEventListener("click",()=>{
+      revenge=false;
+      if(bonus){ bonusMode=false; ov.classList.add("hidden"); ov.innerHTML=""; busy=false; renderBars(); renderScene(); setTimeout(checkFinale,500); }
+      else{ renderBars(); showEvolution(newIdx); }
+    });
   }
 }
 

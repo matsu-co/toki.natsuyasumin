@@ -457,7 +457,7 @@ footer{height:60px;}
 "use strict";
 /* ================= コア：定義・状態・タスク・カレンダー ================= */
 const $ = s => document.querySelector(s);
-const TOKI_VER="v3";   // バージョン確認用（⚙️設定の見出しに表示）
+const TOKI_VER="v4";   // バージョン確認用（⚙️設定の見出しに表示）
 const KEY = "natsuyasumin_toki_v1";   // 公開版とは完全に別のデータ保存キー
 
 /* ---------- プレイヤープロファイル（きょうだい対応） ----------
@@ -844,8 +844,9 @@ function addSegment(color){
       const k=S.segs.length-STAGES[STAGES.length-1].min;
       if(k>0 && k%6===0){
         busy=true; bonusMode=true; S.battles++; revenge=false; save();
-        const types=["race","leaf","jump","climb","dig","janken","fuse","suika","baseball","fishing","hoop","volcano"];
-        const t=types[Math.floor(Math.random()*types.length)];
+        /* ボーナスバトルは きまった順番でローテーション（かたよらない） */
+        const order=["climb","baseball","dig","fuse","suika","fishing","hoop","volcano"];
+        const t=order[(k/6-1)%order.length];
         setTimeout(()=>showBattleIntro(t,S.battles,null),800);
       }
     }
